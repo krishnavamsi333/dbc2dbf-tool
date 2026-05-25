@@ -8,16 +8,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
-# Allow imports from backend/ when running as: python backend/app.py
 sys.path.insert(0, str(Path(__file__).parent))
 
 from validator import validate_dbc_file, ValidationError
 from cleaner import clean_dbc_file
 from converter import convert_dbc_to_dbf
 
-# Resolve frontend path relative to this file (works from any cwd)
+# Frontend files are at project root
 BACKEND_DIR  = Path(__file__).parent
-FRONTEND_DIR = BACKEND_DIR.parent / "frontend"
+ROOT_DIR     = BACKEND_DIR.parent
 
 app = FastAPI(title="DBC → DBF Converter", version="1.0.0")
 
@@ -28,8 +27,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve static frontend assets (style.css, script.js)
-app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
+# Serve CSS/JS from root
+app.mount("/static", StaticFiles(directory=str(ROOT_DIR)), name="static")
 
 UPLOAD_FOLDER = tempfile.gettempdir()
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
@@ -44,9 +43,7 @@ def check_dbc(filename: str):
 
 @app.get("/", response_class=HTMLResponse)
 def index():
-    """Serve the web UI"""
-    html_file = FRONTEND_DIR / "index.html"
-    return HTMLResponse(content=html_file.read_text(encoding="utf-8"))
+    return HTMLResponse(content=(ROOT_DIR / "index.html").read_text(encoding="utf-8"))
 
 
 # ── Health ────────────────────────────────────────────────────────────────────
@@ -143,6 +140,6 @@ async def convert(
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 7860))
     print(f"[INFO] Starting DBC→DBF converter at http://localhost:{port}")
     uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DBC → DBF Converter</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <div class="scanline"></div>
+
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-bracket">[</span>
+        <span class="logo-text">DBC<span class="logo-arrow">→</span>DBF</span>
+        <span class="logo-bracket">]</span>
+      </div>
+      <div class="header-meta">
+        <span class="status-dot" id="statusDot"></span>
+        <span class="status-text" id="statusText">CONNECTING...</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>CAN Database<br /><em>Converter</em></h1>
+      <p class="subtitle">Convert Vector DBC files to BUSMASTER DBF format — with automatic sanitization.</p>
+    </section>
+
+    <section class="converter-panel">
+
+      <!-- Drop Zone -->
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-inner">
+          <div class="drop-icon">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="8" y="6" width="32" height="36" rx="2" stroke="currentColor" stroke-width="2"/>
+              <path d="M16 18h16M16 24h16M16 30h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M28 2v10h10" stroke="currentColor" stroke-width="2"/>
+              <path d="M28 2l10 10" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <p class="drop-label">Drop your <strong>.dbc</strong> file here</p>
+          <p class="drop-sub">or</p>
+          <label class="btn-browse" for="fileInput">Browse File</label>
+          <input type="file" id="fileInput" accept=".dbc" hidden />
+        </div>
+      </div>
+
+      <!-- File Info Bar -->
+      <div class="file-info" id="fileInfo" hidden>
+        <div class="file-info-left">
+          <span class="file-icon">◈</span>
+          <span class="file-name" id="fileName"></span>
+          <span class="file-size" id="fileSize"></span>
+        </div>
+        <button class="btn-clear" id="clearBtn" title="Remove file">✕</button>
+      </div>
+
+      <!-- Options -->
+      <div class="options-row">
+        <label class="toggle-label">
+          <input type="checkbox" id="cleanToggle" checked />
+          <span class="toggle-track">
+            <span class="toggle-thumb"></span>
+          </span>
+          <span>Auto-sanitize before conversion</span>
+        </label>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions-row">
+        <button class="btn-action btn-validate" id="validateBtn" disabled>
+          <span>Validate</span>
+        </button>
+        <button class="btn-action btn-convert" id="convertBtn" disabled>
+          <span>Convert →</span>
+        </button>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-wrap" id="progressWrap" hidden>
+        <div class="progress-bar" id="progressBar"></div>
+        <span class="progress-label" id="progressLabel">Processing...</span>
+      </div>
+
+    </section>
+
+    <!-- Log / Results Panel -->
+    <section class="log-panel" id="logPanel">
+      <div class="log-header">
+        <span class="log-title">// OUTPUT LOG</span>
+        <button class="btn-clear-log" id="clearLogBtn">CLEAR</button>
+      </div>
+      <div class="log-body" id="logBody">
+        <p class="log-empty">No output yet. Upload a file to begin.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <span>DBC2DBF · Built for engineers</span>
+    <span>API: <code id="apiBase"></code></span>
+  </footer>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

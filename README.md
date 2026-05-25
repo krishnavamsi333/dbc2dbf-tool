@@ -1,3 +1,12 @@
+---
+title: DBC to DBF Converter
+emoji: 🔌
+colorFrom: green
+colorTo: gray
+sdk: docker
+pinned: false
+---
+
 # DBC → DBF Converter
 
 Convert Vector **DBC** (CAN database) files to BUSMASTER **DBF** format.  
@@ -20,7 +29,7 @@ Includes a REST API, drag-and-drop web UI, and a CLI tool.
 ```
 dbc2dbf-tool/
 ├── backend/
-│   ├── app.py          # Flask REST API
+│   ├── app.py          # FastAPI REST API
 │   ├── converter.py    # Core DBC → DBF logic (canmatrix)
 │   ├── cleaner.py      # DBC sanitizer
 │   ├── validator.py    # File validation
@@ -29,8 +38,7 @@ dbc2dbf-tool/
 │   ├── index.html      # Web UI
 │   ├── style.css
 │   └── script.js
-├── docker/
-│   └── Dockerfile
+├── Dockerfile          # HuggingFace Spaces / Docker deployment
 ├── docs/
 │   ├── API.md
 │   └── BUSMASTER_NOTES.md
@@ -41,59 +49,17 @@ dbc2dbf-tool/
 
 ---
 
-## Setup
-
-### Requirements
-
-- Python 3.9+
-- pip
-
-### Install
+## Local Setup
 
 ```bash
-git clone https://github.com/youruser/dbc2dbf-tool.git
+git clone https://huggingface.co/spaces/krishnavamsi333/dbc2dbf-tool
 cd dbc2dbf-tool
 
 python -m venv venv
-source venv/bin/activate       # Windows: venv\Scripts\activate
-pip install -r backend/requirements.txt
-```
-
----
-
-## Usage
-
-### 1. Web UI + API (recommended)
-
-```bash
-cd dbc2dbf-tool
 source venv/bin/activate
+pip install -r backend/requirements.txt
 python backend/app.py
-```
-
-Then open `frontend/index.html` in your browser (or serve it with any static server).
-
-The API runs at `http://localhost:5000`.
-
----
-
-### 2. CLI
-
-```bash
-# Basic conversion
-python backend/converter.py input.dbc output.dbf
-
-# With auto-sanitize
-python backend/converter.py input.dbc output.dbf --clean
-```
-
----
-
-### 3. Docker
-
-```bash
-docker build -t dbc2dbf -f docker/Dockerfile .
-docker run -p 5000:5000 dbc2dbf
+# open http://localhost:7860
 ```
 
 ---
@@ -107,23 +73,6 @@ docker run -p 5000:5000 dbc2dbf
 | POST   | `/api/convert`  | Convert DBC → DBF (returns file)   |
 
 See [docs/API.md](docs/API.md) for full reference.
-
----
-
-## Environment Variables
-
-| Variable      | Default | Description                     |
-|---------------|---------|---------------------------------|
-| `PORT`        | `5000`  | API server port                 |
-| `FLASK_DEBUG` | `false` | Enable Flask debug mode         |
-
----
-
-## Dependencies
-
-- [canmatrix](https://github.com/ebroecker/canmatrix) — DBC/DBF parsing and conversion
-- [Flask](https://flask.palletsprojects.com/) — REST API framework
-- [flask-cors](https://flask-cors.readthedocs.io/) — CORS support
 
 ---
 

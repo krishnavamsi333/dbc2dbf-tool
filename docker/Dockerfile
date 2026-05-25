@@ -6,19 +6,14 @@ WORKDIR /app
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend
+# Copy all project files
 COPY backend/ ./backend/
-
-# Copy frontend (served as static files via Flask or nginx)
 COPY frontend/ ./frontend/
 
-# Expose port
-EXPOSE 5000
-
-# Set environment
-ENV FLASK_DEBUG=false
-ENV PORT=5000
+# HuggingFace Spaces runs on port 7860
+ENV PORT=7860
 ENV PYTHONPATH=/app/backend
 
-# Run the Flask app
+EXPOSE 7860
+
 CMD ["python", "backend/app.py"]

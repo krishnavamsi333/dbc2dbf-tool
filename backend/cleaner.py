@@ -21,17 +21,25 @@ def clean_dbc_file(input_path, output_path):
     """
     changes = []
 
+    # FIX: Detect BOM from raw bytes BEFORE reading, since utf-8-sig strips it
+    # on both reads — making the old comparison always equal (always False).
+    with open(input_path, "rb") as f:
+        raw_start = f.read(3)
+    has_bom = raw_start == b'\xef\xbb\xbf'
+
     # --- Read with encoding fallback ---
     try:
         with open(input_path, "r", encoding="utf-8-sig") as f:  # utf-8-sig strips BOM
             content = f.read()
-        if content != open(input_path, "r", encoding="utf-8-sig").read():
+        if has_bom:
             changes.append("Removed UTF-8 BOM")
     except UnicodeDecodeError:
         with open(input_path, "r", encoding="latin-1") as f:
             content = f.read()
         changes.append("Re-encoded from latin-1 to UTF-8")
 
+    # FIX: Capture original AFTER reading (and after BOM strip) so that
+    # was_modified correctly reflects all subsequent text changes.
     original = content
 
     # --- Remove NULL bytes ---
@@ -76,12 +84,16 @@ def clean_dbc_file(input_path, output_path):
         changes.append("Fixed missing space in BO_ message definitions")
     content = fixed
 
-    # --- Fix signal units: SG_ ... @ with empty unit (no quotes) → "" ---
-    # Pattern: ends with |X@... (Y,Z) [A|B] <missing_or_bare_unit>
+    # FIX: Corrected signal unit regex.
+    # Old pattern used (?!") + \s which almost never matched (requires a
+    # non-quote char followed by whitespace — misses end-of-line cases entirely).
+    # New pattern: matches a signal bit layout + value range followed by
+    # nothing or only spaces before end-of-line, and injects empty quotes.
     fixed = re.sub(
-        r'(\|\d+@\d+[+-]\s*\([^)]+\)\s*\[[^\]]*\])\s+(?!")(\s)',
-        r'\1 "" \2',
+        r'(\|\d+@\d+[+-]\s*\([^)]+\)\s*\[[^\]]*\])([ \t]*)$',
+        r'\1 ""',
         content,
+        flags=re.MULTILINE,
     )
     if fixed != content:
         changes.append("Added missing quotes around empty signal units")

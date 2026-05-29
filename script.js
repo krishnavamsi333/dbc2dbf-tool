@@ -162,7 +162,7 @@ validateBtn.addEventListener("click", async () => {
         log("  No warnings found", "ok");
       }
     } else {
-      log(`Validation failed: ${data.error}`, "error");
+      log(`Validation failed: ${data.detail}`, "error");
     }
   } catch (e) {
     log(`Request failed: ${e.message}`, "error");
@@ -195,7 +195,7 @@ convertBtn.addEventListener("click", async () => {
 
     if (!res.ok) {
       const data = await res.json();
-      log(`Conversion failed: ${data.error}`, "error");
+      log(`Conversion failed: ${data.detail}`, "error");
       hideProgress();
       return;
     }

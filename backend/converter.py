@@ -79,7 +79,10 @@ def main():
         import tempfile
         from cleaner import clean_dbc_file
 
-        tmp_cleaned = tempfile.mktemp(suffix=".dbc")
+        # FIX: Use mkstemp instead of deprecated mktemp (which has a race
+        # condition between name generation and actual file creation).
+        fd, tmp_cleaned = tempfile.mkstemp(suffix=".dbc")
+        os.close(fd)  # close the fd — clean_dbc_file will open it itself
         try:
             print("[INFO] Cleaning DBC file...")
             result = clean_dbc_file(input_file, tmp_cleaned)

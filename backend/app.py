@@ -7,6 +7,7 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.background import BackgroundTask
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -37,6 +38,16 @@ MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
 def check_dbc(filename: str):
     if not filename.lower().endswith(".dbc"):
         raise HTTPException(status_code=400, detail="File must be a .dbc file")
+
+
+def _cleanup(*paths):
+    """Delete temp files after the response has been fully streamed."""
+    for p in paths:
+        try:
+            if os.path.exists(p):
+                os.remove(p)
+        except Exception:
+            pass  # best-effort cleanup
 
 
 # ── Frontend ──────────────────────────────────────────────────────────────────
@@ -78,6 +89,7 @@ async def validate(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
 
     finally:
+        # validate endpoint returns JSON — safe to delete synchronously
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
 
@@ -87,7 +99,8 @@ async def validate(file: UploadFile = File(...)):
 @app.post("/api/convert")
 async def convert(
     file: UploadFile = File(...),
-    clean: str = Form(default="true"),
+    # FIX: default changed to "false" so auto-sanitize is opt-in, not opt-out
+    clean: str = Form(default="false"),
 ):
     check_dbc(file.filename)
 
@@ -117,23 +130,25 @@ async def convert(
         convert_dbc_to_dbf(source_file, tmp_output)
 
         output_filename = f"{base_name}.dbf"
+
+        # FIX: Use BackgroundTask so temp files are deleted AFTER the response
+        # is fully streamed — not before (which caused the 1KB truncation bug).
         return FileResponse(
             path=tmp_output,
             media_type="application/octet-stream",
             filename=output_filename,
             headers={"Content-Disposition": f'attachment; filename="{output_filename}"'},
+            background=BackgroundTask(_cleanup, tmp_input, tmp_cleaned, tmp_output),
         )
 
     except ValidationError as e:
+        # Clean up synchronously on error — no file is being streamed
+        _cleanup(tmp_input, tmp_cleaned, tmp_output)
         raise HTTPException(status_code=422, detail=f"Validation error: {str(e)}")
 
     except Exception as e:
+        _cleanup(tmp_input, tmp_cleaned, tmp_output)
         raise HTTPException(status_code=500, detail=f"Conversion failed: {str(e)}")
-
-    finally:
-        for path in [tmp_input, tmp_cleaned]:
-            if os.path.exists(path):
-                os.remove(path)
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
